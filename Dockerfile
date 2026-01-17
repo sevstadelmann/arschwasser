@@ -26,7 +26,7 @@ WORKDIR /app
 #Copy server files
 COPY --from=builder /app/server .
 # Copy built frontend assets from the builder stage
-COPY --from=builder /app/dist ./dist
+COPY --from=builder /app/frontend/dist ./dist
 
 EXPOSE 3000
 
