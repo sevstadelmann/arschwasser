@@ -12,7 +12,7 @@ RUN ls -R /app
 WORKDIR /app/frontend
 
 # Now run the install
-RUN npm install
+RUN npm install --legacy-peer-deps
 RUN npm run build
 
 # --- Stage 2: Run ---
