@@ -13,7 +13,7 @@ WORKDIR /app/server
 RUN npm install
 
 # Install dependencies and build the frontend
-WORKDIR /app
+WORKDIR /app/frontend
 RUN mkdir dist
 RUN bash -c 'if [ -f package.json ]; then npm install && npm run build; fi'
 
