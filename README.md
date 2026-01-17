@@ -4,7 +4,7 @@
 ![License](https://img.shields.io/github/license/sevstadelmann/arschwasser?style=flat-square)
 ![Docker](https://img.shields.io/badge/Docker-Ready-blue?style=flat-square&logo=docker)
 
-This is the main orchestrator repository for the **Arschwasser** website. It integrates the frontend and backend services into a unified development and deployment workflow using Docker.
+This is the main repository for the **Arschwasser** website. It integrates the frontend and backend services into a unified development and deployment workflow using Docker.
 
 ---
 
