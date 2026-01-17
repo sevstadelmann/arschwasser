@@ -1,33 +1,24 @@
-# Stage 1: Build the frontend, and install server dependencies
+# --- Builder Stage ---
 FROM node:22 AS builder
-
 WORKDIR /app
 
-# Copy all files from the current directory
-COPY . ./
-RUN echo "API_KEY=PLACEHOLDER" > ./.env
-RUN echo "GEMINI_API_KEY=PLACEHOLDER" >> ./.env
+# Copy everything
+COPY . .
 
-# Install server dependencies
-WORKDIR /app/server
+# Build the frontend (No 'if' statement)
+WORKDIR /app/frontend
 RUN npm install
+RUN npm run build
 
-# Install dependencies and build the frontend
-WORKDIR /app
-RUN mkdir dist
-RUN bash -c 'if [ -f package.json ]; then npm install && npm run build; fi'
-
-
-# Stage 2: Build the final server image
+# --- Final Stage ---
 FROM node:22
-
 WORKDIR /app
 
-#Copy server files
-COPY --from=builder /app/server .
-# Copy built frontend assets from the builder stage
-COPY --from=builder /app/dist ./dist
+# Copy the server files
+COPY --from=builder /app/server ./server
 
-EXPOSE 3000
+# Copy the dist folder from the frontend subfolder
+COPY --from=builder /app/frontend/dist ./dist
 
-CMD ["node", "server.js"]
+EXPOSE 8080
+CMD ["node", "server/index.js"]
