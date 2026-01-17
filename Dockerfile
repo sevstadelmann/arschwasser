@@ -2,11 +2,16 @@
 FROM node:22 AS builder
 WORKDIR /app
 
-# 1. Copy everything (including package.json and the frontend folder)
+# Copy the entire repository into /app
 COPY . .
 
-# 2. Install and Build from the ROOT
-# (This assumes package.json is in the root)
+# DEBUG: This will show us exactly what got copied into /app
+RUN ls -R /app
+
+# Move into the frontend folder where the package.json is
+WORKDIR /app/frontend
+
+# Now run the install
 RUN npm install
 RUN npm run build
 
