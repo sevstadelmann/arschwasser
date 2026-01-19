@@ -19,7 +19,7 @@ export const Footer: React.FC = () => {
           </div>
           
           <div className="flex space-x-6">
-             <a href="https://instagram.com/arschwasserofficial/" className="hover:text-[#23C4D8] transition-colors"><Instagram /></a>
+             <a href="https://instagram.com/arschwasserofficial/" target='_blank' className="hover:text-[#23C4D8] transition-colors"><Instagram /></a>
           </div>
         </div>
         

@@ -94,7 +94,6 @@ export const Navbar: React.FC = () => {
                 <span className="absolute -bottom-1 left-0 w-0 h-0.5 bg-[#23C4D8] transition-all duration-300 group-hover:w-full"></span>
               </motion.button>
             ))}
-            
             <div className="flex items-center gap-2">
               <button 
                 onClick={toggleLanguage}

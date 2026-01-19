@@ -37,7 +37,7 @@ function App() {
                 <Route path="/imprint" element={<Imprint />} />
                 <Route path="/privacy" element={<Privacy />} />
                 <Route path="/contact" element={<Contact />} />
-                <Route path="/checkout" element={<Checkout />} />
+                {/*<Route path="/checkout" element={<Checkout />} />*/}
               </Routes>
             </main>
 
