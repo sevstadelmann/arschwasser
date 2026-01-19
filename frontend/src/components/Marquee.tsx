@@ -21,10 +21,10 @@ export const Marquee: React.FC<MarqueeProps> = ({ text, className = "", baseVelo
   const { scrollY } = useScroll();
   const scrollVelocity = useVelocity(scrollY);
   const smoothVelocity = useSpring(scrollVelocity, {
-    damping: 50,
-    stiffness: 400
+    damping: 400,
+    stiffness: 50
   });
-  const velocityFactor = useTransform(smoothVelocity, [0, 1000], [0, 5], {
+  const velocityFactor = useTransform(smoothVelocity, [0, 600], [0, 5], {
     clamp: false
   });
 
@@ -33,7 +33,7 @@ export const Marquee: React.FC<MarqueeProps> = ({ text, className = "", baseVelo
   const directionFactor = useRef<number>(1);
 
   useAnimationFrame((t, delta) => {
-    let moveBy = directionFactor.current * baseVelocity * (delta / 1000);
+    let moveBy = directionFactor.current * baseVelocity * (delta / 2000);
 
     /**
      * This is what changes the direction of the scroll once we

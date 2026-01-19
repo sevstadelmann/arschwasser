@@ -4,7 +4,6 @@ import { useProgress, useGLTF, Environment, Center } from '@react-three/drei';
 import { Canvas, useFrame } from '@react-three/fiber';
 import * as THREE from 'three';
 
-// Standard Khronos Rubber Duck GLB
 const DUCK_URL = "https://raw.githubusercontent.com/KhronosGroup/glTF-Sample-Models/master/2.0/Duck/glTF-Binary/Duck.glb";
 
 // Preload to ensure it's ready for the animation
@@ -24,7 +23,7 @@ function DuckModel() {
   return (
     <group ref={ref}>
        <Center>
-          <primitive object={clone} scale={2.5} /> 
+          <primitive object={clone} scale={2} /> 
        </Center>
     </group>
   );

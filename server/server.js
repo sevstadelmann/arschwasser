@@ -13,6 +13,10 @@ const WebSocket = require('ws');
 const { URLSearchParams, URL } = require('url');
 const rateLimit = require('express-rate-limit');
 
+// --- SWISSID INTEGRATION: Imports ---
+const session = require('express-session');
+const { Issuer, generators } = require('openid-client');
+
 const app = express();
 const port = process.env.PORT || 3000;
 const externalApiBaseUrl = 'https://generativelanguage.googleapis.com';
@@ -21,12 +25,8 @@ const externalWsBaseUrl = 'wss://generativelanguage.googleapis.com';
 // Support either API key env-var variant
 const apiKey = process.env.GEMINI_API_KEY || process.env.API_KEY;
 
-// --- PFAD LOGIK (NEU) ---
+// --- PFAD LOGIK (Unverändert) ---
 const isProduction = process.env.NODE_ENV === 'production';
-
-// Im Docker (Production) liegt der Ordner 'public' direkt neben der server.js (siehe Dockerfile).
-// Lokal (Development) liegt er im Parallelordner '../frontend/dist' (bei Vite) oder '../frontend/build' (bei CRA).
-// WICHTIG: Prüfe, ob dein Build-Ordner 'dist' oder 'build' heißt und pass es hier ggf. an!
 const frontendBuildPath = isProduction
     ? path.join(__dirname, 'public')
     : path.join(__dirname, '..', 'frontend', 'dist'); 
@@ -39,6 +39,18 @@ if (!apiKey) {
 } else {
     console.log("API KEY FOUND (proxy will use this)");
 }
+
+// --- SWISSID INTEGRATION: Session Middleware ---
+// Required to store the "state" and "code_verifier" during the login handshake
+app.use(session({
+    secret: process.env.SESSION_SECRET || 'change_me_to_a_random_string', 
+    resave: false,
+    saveUninitialized: false,
+    cookie: { 
+        secure: isProduction, // Set to true if you are using HTTPS in production
+        httpOnly: true 
+    }
+}));
 
 // Limit body size to 50mb
 app.use(express.json({ limit: '50mb' }));
@@ -61,13 +73,12 @@ const proxyLimiter = rateLimit({
 // Apply rate limiter
 app.use('/api-proxy', proxyLimiter);
 
-// --- API PROXY LOGIC (Unverändert, nur eingerückt) ---
+// --- API PROXY LOGIC (Unverändert) ---
 app.use('/api-proxy', async (req, res, next) => {
     // WebSocket Upgrade Check
     if (req.headers.upgrade && req.headers.upgrade.toLowerCase() === 'websocket') {
         return next();
     }
-
     // CORS Preflight
     if (req.method === 'OPTIONS') {
         res.setHeader('Access-Control-Allow-Origin', '*');
@@ -76,12 +87,10 @@ app.use('/api-proxy', async (req, res, next) => {
         res.setHeader('Access-Control-Max-Age', '86400');
         return res.sendStatus(200);
     }
-
     try {
         const targetPath = req.url.startsWith('/') ? req.url.substring(1) : req.url;
         const apiUrl = `${externalApiBaseUrl}/${targetPath}`;
         
-        // Prepare headers
         const outgoingHeaders = {};
         for (const header in req.headers) {
             if (!['host', 'connection', 'content-length', 'transfer-encoding', 'upgrade', 'sec-websocket-key', 'sec-websocket-version', 'sec-websocket-extensions'].includes(header.toLowerCase())) {
@@ -90,7 +99,6 @@ app.use('/api-proxy', async (req, res, next) => {
         }
         outgoingHeaders['X-Goog-Api-Key'] = apiKey;
 
-        // Content-Type handling
         if (req.headers['content-type'] && ['POST', 'PUT', 'PATCH'].includes(req.method.toUpperCase())) {
             outgoingHeaders['Content-Type'] = req.headers['content-type'];
         } else if (['POST', 'PUT', 'PATCH'].includes(req.method.toUpperCase())) {
@@ -117,13 +125,10 @@ app.use('/api-proxy', async (req, res, next) => {
 
         const apiResponse = await axios(axiosConfig);
 
-        // Forward headers
         for (const header in apiResponse.headers) {
             res.setHeader(header, apiResponse.headers[header]);
         }
         res.status(apiResponse.status);
-
-        // Stream data
         apiResponse.data.pipe(res);
 
     } catch (error) {
@@ -134,14 +139,122 @@ app.use('/api-proxy', async (req, res, next) => {
     }
 });
 
-// --- FRONTEND SERVING (NEU STRUKTURIERT) ---
+
+// ==================================================
+// --- SWISSID INTEGRATION: Auth Routes & Logic ---
+// ==================================================
+
+let swissIdClient = null;
+
+// Helper: Configure Frontend URL
+// In Prod: Redirect to relative path '/checkout'. 
+// In Dev: Redirect to where React is running (usually localhost:5173 or 3000)
+const FRONTEND_URL = isProduction 
+    ? '/checkout' 
+    : 'http://localhost:5173/checkout'; 
+
+// Initialize OIDC Client
+async function initSwissID() {
+    try {
+        // Use Sandbox for testing. Change to https://login.swissid.ch for production.
+        const swissIdIssuer = await Issuer.discover('https://login.sandbox.swissid.ch');
+        
+        swissIdClient = new swissIdIssuer.Client({
+            client_id: process.env.SWISSID_CLIENT_ID,
+            client_secret: process.env.SWISSID_CLIENT_SECRET,
+            // Ensure this matches exactly what you registered in SwissID portal
+            redirect_uris: [`http://localhost:${port}/auth/callback`], 
+            response_types: ['code'],
+        });
+        console.log("SwissID Client initialized successfully.");
+    } catch (err) {
+        console.error("SwissID Initialization Error:", err.message);
+    }
+}
+initSwissID();
+
+// Helper: Calculate Age
+function calculateAge(birthDateString) {
+    const today = new Date();
+    const birthDate = new Date(birthDateString);
+    let age = today.getFullYear() - birthDate.getFullYear();
+    const m = today.getMonth() - birthDate.getMonth();
+    if (m < 0 || (m === 0 && today.getDate() < birthDate.getDate())) {
+        age--;
+    }
+    return age;
+}
+
+// Route 1: Trigger Login
+app.get('/auth/swissid', async (req, res) => {
+    if (!swissIdClient) await initSwissID(); // Ensure client is ready
+    if (!swissIdClient) return res.status(500).send("Auth configuration error");
+
+    const code_verifier = generators.codeVerifier();
+    const code_challenge = generators.codeChallenge(code_verifier);
+    
+    req.session.code_verifier = code_verifier; // Save to session
+
+    const authUrl = swissIdClient.authorizationUrl({
+        scope: 'openid profile birthdate', // Critical scope
+        resource: 'https://login.swissid.ch', 
+        code_challenge,
+        code_challenge_method: 'S256',
+    });
+
+    res.redirect(authUrl);
+});
+
+// Route 2: Callback Handler
+app.get('/auth/callback', async (req, res) => {
+    if (!swissIdClient) await initSwissID();
+
+    try {
+        const params = swissIdClient.callbackParams(req);
+        const code_verifier = req.session.code_verifier;
+
+        if (!code_verifier) {
+            return res.redirect(`${FRONTEND_URL}?verification=error`);
+        }
+
+        const tokenSet = await swissIdClient.callback(
+            `http://localhost:${port}/auth/callback`, 
+            params, 
+            { code_verifier }
+        );
+
+        const userInfo = await swissIdClient.userinfo(tokenSet.access_token);
+        const birthDate = userInfo.birthdate;
+
+        if (!birthDate) {
+            return res.redirect(`${FRONTEND_URL}?verification=failed&reason=no_date`);
+        }
+
+        if (calculateAge(birthDate) >= 18) {
+            return res.redirect(`${FRONTEND_URL}?verification=success`);
+        } else {
+            return res.redirect(`${FRONTEND_URL}?verification=underage`);
+        }
+
+    } catch (err) {
+        console.error("Auth Callback Error:", err);
+        res.redirect(`${FRONTEND_URL}?verification=error`);
+    }
+});
+
+
+// ==================================================
+// --- END SWISSID INTEGRATION ---
+// ==================================================
+
+
+// --- FRONTEND SERVING (Unverändert) ---
 
 // 1. Statische Dateien (JS, CSS, Images) ausliefern
 app.use(express.static(frontendBuildPath));
-// Optional: Falls du auf /public zugreifst (Legacy Support)
 app.use('/public', express.static(frontendBuildPath));
 
-// 2. Service Worker speziell behandeln (muss oft im Root liegen)
+// 2. Service Worker
 app.get('/service-worker.js', (req, res) => {
    const swPath = path.join(frontendBuildPath, 'service-worker.js');
    if (fs.existsSync(swPath)) {
@@ -151,11 +264,12 @@ app.get('/service-worker.js', (req, res) => {
    }
 });
 
-// 3. Catch-All Route für SPA (React Router Fix)
-// Alles was nicht /api-proxy ist und keine statische Datei war, liefert die index.html
+// 3. Catch-All Route für SPA
 app.get('*', (req, res) => {
-    // Sicherheitsnetz: Falls API-Calls durchrutschen, nicht HTML zurückgeben
-    if (req.path.startsWith('/api-proxy')) return res.status(404).send('API endpoint not found');
+    // Sicherheitsnetz: API-Calls nicht HTML zurückgeben
+    if (req.path.startsWith('/api-proxy') || req.path.startsWith('/auth')) {
+        return res.status(404).send('Endpoint not found');
+    }
 
     const indexPath = path.join(frontendBuildPath, 'index.html');
     if (fs.existsSync(indexPath)) {
@@ -171,6 +285,7 @@ app.get('*', (req, res) => {
 const server = app.listen(port, () => {
     console.log(`Server listening on port ${port}`);
     console.log(`HTTP/WS proxy active on /api-proxy/**`);
+    console.log(`Auth routes active on /auth/swissid`);
 });
 
 

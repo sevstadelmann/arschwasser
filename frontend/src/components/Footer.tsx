@@ -1,5 +1,5 @@
 import React from 'react';
-import { Instagram, Facebook, Twitter } from 'lucide-react';
+import { Instagram } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { Logo } from './Logo';
 import { useLanguage } from '../context/LanguageContext';
@@ -26,7 +26,6 @@ export const Footer: React.FC = () => {
         <div className="mt-12 flex flex-wrap justify-center md:justify-start gap-8 text-sm text-slate-400">
            <Link to="/imprint" className="hover:text-white">{t('footer.imprint')}</Link>
            <Link to="/privacy" className="hover:text-white">{t('footer.privacy')}</Link>
-           <a href="#" className="hover:text-white">{t('footer.terms')}</a>
            <Link to="/contact" className="hover:text-white">{t('footer.contact')}</Link>
         </div>
       </div>

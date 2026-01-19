@@ -9,6 +9,7 @@ import { LanguageProvider } from './context/LanguageContext.tsx';
 import { Home } from './pages/Home.tsx';
 import { Imprint, Privacy } from './pages/Legal.tsx';
 import { Contact } from './pages/Contact.tsx';
+import { Checkout } from './pages/Checkout.tsx';
 import { Loader } from './components/Loader.tsx';
 
 // Scroll to top on route change
@@ -36,6 +37,7 @@ function App() {
                 <Route path="/imprint" element={<Imprint />} />
                 <Route path="/privacy" element={<Privacy />} />
                 <Route path="/contact" element={<Contact />} />
+                <Route path="/checkout" element={<Checkout />} />
               </Routes>
             </main>
 

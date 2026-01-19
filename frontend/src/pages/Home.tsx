@@ -10,7 +10,7 @@ export const Home: React.FC = () => {
   return (
     <>
       <Hero />
-      <div className="relative z-40 -mt-10 mb-10">
+      <div className="relative z-40 -mt-10 mb-20">
         <Marquee 
           text={t('marquee1.text')}
           className="bg-[#23C4D8] text-white rotate-1 scale-105 border-y-4 border-white shadow-lg"

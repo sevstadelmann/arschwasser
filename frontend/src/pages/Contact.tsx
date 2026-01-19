@@ -69,10 +69,12 @@ export const Contact: React.FC = () => {
                     <MapPin className="shrink-0 text-[#23C4D8]" />
                     <span>vestryx KLG<br/>Zihlmattweg 44<br/>6005 Luzern<br/>Schweiz</span>
                  </div>
+                 {/*}
                  <div className="flex items-center gap-4 text-slate-600">
                     <Phone className="shrink-0 text-[#23C4D8]" />
                     <span>+41 41 123 45 67</span>
                  </div>
+                 */}
                  <div className="flex items-center gap-4 text-slate-600">
                     <Mail className="shrink-0 text-[#23C4D8]" />
                     <span>hello@arschwasser.com</span>

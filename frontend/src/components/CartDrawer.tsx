@@ -3,11 +3,17 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { X, Plus, Minus, ShoppingBag } from 'lucide-react';
 import { useCart } from '../context/CartContext';
 import { useLanguage } from '../context/LanguageContext';
-import { Link } from 'react-router-dom';
+import { useNavigate } from 'react-router-dom';
 
 export const CartDrawer: React.FC = () => {
   const { items, removeFromCart, updateQuantity, cartTotal, isCartOpen, closeCart } = useCart();
   const { t } = useLanguage();
+  const navigate = useNavigate();
+
+  const handleCheckout = () => {
+    closeCart();
+    navigate('/checkout');
+  };
 
   return (
     <AnimatePresence>
@@ -97,7 +103,10 @@ export const CartDrawer: React.FC = () => {
                   <span>{t('cart.total')}</span>
                   <span>CHF {cartTotal.toFixed(2)}</span>
                 </div>
-                <button className="w-full bg-slate-900 text-white py-4 rounded-full font-bold text-lg hover:bg-[#23C4D8] transition-colors">
+                <button 
+                  onClick={handleCheckout}
+                  className="w-full bg-slate-900 text-white py-4 rounded-full font-bold text-lg hover:bg-[#23C4D8] transition-colors"
+                >
                   {t('cart.checkout')}
                 </button>
                 <p className="text-center text-xs text-slate-400 mt-4">

@@ -39,13 +39,10 @@ export const Hero: React.FC = () => {
 
   return (
     <section id="product" className="relative h-[100dvh] w-full overflow-hidden bg-black flex flex-col items-center justify-center">
-      
-      {/* 1. Background Layer - Clean & Cinematic */}
       <motion.div 
         className="absolute inset-0 z-0"
         style={{ opacity }}
       >
-        {/* Parallax Image */}
         <motion.div 
           className="absolute inset-0"
           animate={{ 
@@ -55,23 +52,14 @@ export const Hero: React.FC = () => {
           }}
           transition={{ type: "spring", stiffness: 40, damping: 30 }}
         >
-           <img 
-            src="/hero-bg.jpg" 
-            alt="Party Atmosphere" 
-            className="w-full h-full object-cover opacity-60"
-          />
         </motion.div>
-
-        {/* Clean Gradient Overlay for text legibility */}
         <div className="absolute inset-0 bg-gradient-to-b from-black/70 via-black/40 to-black/90" />
       </motion.div>
-
-      {/* 2. Massive Typography - Behind Model */}
       <motion.div 
         style={{ y: yText }}
-        className="absolute inset-0 z-10 flex flex-col items-center justify-center pointer-events-none select-none pt-10 md:pt-0"
+        className="absolute inset-0 z-10 flex flex-col items-center justify-center pointer-events-none select-none pt-0"
       >
-        <div className="relative text-center">
+        <div className="relative text-center pb-20">
             <h1 className="text-[40vw] md:text-[16vw] leading-[0.8] brand-font text-white drop-shadow-2xl tracking-tighter">
               LEMON
             </h1>
@@ -81,22 +69,21 @@ export const Hero: React.FC = () => {
         </div>
       </motion.div>
 
-      {/* 3. 3D Model - Centered & Heroic */}
-      <div className="absolute inset-0 z-20 flex items-center justify-center pointer-events-none">
+      {/* 3D Model - Centered & Heroic */}
+      <div className="absolute inset-0 z-20 flex items-center justify-center pointer-events-none pb-20">
         {/* Allow pointer events only on the model canvas container if needed, but HeroModel handles it */}
         <div className="w-full h-[60vh] md:h-[75vh] pointer-events-auto">
            <HeroModel />
         </div>
       </div>
 
-      {/* 4. Foreground Info & CTA - Bottom Aligned */}
-      <div className="absolute bottom-0 left-0 w-full z-30 pb-8 md:pb-12 px-6 flex flex-col items-center justify-end text-center bg-gradient-to-t from-black via-black/80 to-transparent pt-32">
+      <div className="absolute bottom-5 md:bottom-3 left-0 w-full z-30 pb-8 md:pb-12 px-6 flex flex-col items-center justify-end text-center bg-gradient-to-t from-black via-black/80 to-transparent pt-32">
         
         <motion.div 
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.5, duration: 0.8 }}
-            className="space-y-6 max-w-2xl"
+            className="space-y-7 max-w-2xl"
         >
             <p className="text-lg md:text-xl text-slate-200 font-medium drop-shadow-md">
               {t('hero.desc')} <br className="hidden md:block" />
