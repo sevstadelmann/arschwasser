@@ -21,8 +21,10 @@ const externalWsBaseUrl = 'wss://generativelanguage.googleapis.com';
 // Support either API key env-var variant
 const apiKey = process.env.GEMINI_API_KEY || process.env.API_KEY;
 
-const staticPath = path.join(__dirname, '..', 'frontend', 'public');
-const publicPath = path.join(__dirname,'public');
+const staticPath = path.join(__dirname, 'frontend', 'public');
+const publicPath = path.join(__dirname, 'public');
+
+console.log("Static path:", staticPath);
 
 
 if (!apiKey) {
