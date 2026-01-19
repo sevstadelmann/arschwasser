@@ -218,7 +218,7 @@ app.get('/auth/callback', async (req, res) => {
         }
 
         const tokenSet = await swissIdClient.callback(
-            `http://localhost:${port}/auth/callback`, 
+            `/auth/callback`, 
             params, 
             { code_verifier }
         );
