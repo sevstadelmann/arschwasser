@@ -21,7 +21,7 @@ const externalWsBaseUrl = 'wss://generativelanguage.googleapis.com';
 // Support either API key env-var variant
 const apiKey = process.env.GEMINI_API_KEY || process.env.API_KEY;
 
-const staticPath = path.join(__dirname,'dist');
+const staticPath = path.join(__dirname, '..', 'frontend', 'public');
 const publicPath = path.join(__dirname,'public');
 
 
@@ -196,7 +196,7 @@ if ('serviceWorker' in navigator) {
 `;
 
 // Serve index.html or placeholder based on API key and file availability
-app.get('/frontend/public', (req, res) => {
+app.get('/', (req, res) => {
     const placeholderPath = path.join(publicPath, 'placeholder.html');
 
     // Try to serve index.html
