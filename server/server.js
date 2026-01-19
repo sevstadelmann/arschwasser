@@ -196,7 +196,7 @@ if ('serviceWorker' in navigator) {
 `;
 
 // Serve index.html or placeholder based on API key and file availability
-app.get('/', (req, res) => {
+app.get('/frontend/public', (req, res) => {
     const placeholderPath = path.join(publicPath, 'placeholder.html');
 
     // Try to serve index.html
