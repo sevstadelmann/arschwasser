@@ -33,7 +33,7 @@ COPY server/server.js ./
 # 5. Das gebaute Frontend kopieren
 # Wir benennen den Ordner im Container explizit 'public', damit server.js ihn findet
 # ACHTUNG: Passe 'dist' an 'build' an, falls du kein Vite nutzt!
-COPY --from=builder /app/frontend/dist ./public
+COPY --from=builder /app/frontend/build ./public
 
 # 6. Starten
 EXPOSE 3000
