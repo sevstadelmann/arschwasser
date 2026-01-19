@@ -1,40 +1,41 @@
-# --- Stage 1: Builder ---
-FROM node:22 AS builder
+# --- Stage 1: Build ---
+FROM node:22-alpine AS builder
 WORKDIR /app
 
-# 1. Copy everything into the container
-# Ensure your .gitmodules are present so the submodule step in YAML works
+# 1. Alles kopieren
 COPY . .
 
-# 2. Build the Frontend
-# We move into the subdirectory where your frontend package.json lives
+# 2. Frontend bauen
 WORKDIR /app/frontend
-
-# Fix: Use --legacy-peer-deps to resolve the React/TypeScript version conflict
-# and explicitly install 'three' which was missing in your last build
 RUN npm install --legacy-peer-deps
 RUN npm run build
+# HINWEIS: Prüfe, ob hier ein Ordner 'dist' oder 'build' entsteht! 
+# Vite = dist, CRA = build. Ich gehe unten von 'dist' aus.
 
-# --- Stage 2: Final Run Image ---
-FROM node:22
+# --- Stage 2: Production ---
+FROM node:22-alpine
 WORKDIR /app
 
-# 3. Copy only the files needed for the server to run
-# From the logs, your server files are in /app/server
-COPY --from=builder /app/server ./server
+# Environment auf production setzen (wichtig für server.js Logik)
+ENV NODE_ENV=production
 
-# 4. Copy the package.json needed for the server
-# Your logs showed a package.json exists inside /app/server
-COPY --from=builder /app/server/package.json ./package.json
-
-# 5. Copy the frontend build output into a public folder for the server
-# React usually builds to a folder named 'build' or 'dist'
-COPY --from=builder /app/frontend/build ./public
-
-# 6. Install production dependencies for the server
+# 3. Server-Dependencies installieren (Cache effizient nutzen)
+# Wir kopieren erst nur package.json aus dem server-Ordner
+COPY server/package.json ./
 RUN npm install --only=production
 
-# 7. Start the application
-EXPOSE 8080
-ENV PORT=8080
-CMD ["node", "server/server.js"]
+# 4. Den Server-Code kopieren
+# Wir kopieren server.js direkt ins Root von /app
+COPY server/server.js ./
+# Falls du weitere Server-Dateien hast (z.B. utils.js), kopiere den ganzen Ordner:
+# COPY server/ ./
+
+# 5. Das gebaute Frontend kopieren
+# Wir benennen den Ordner im Container explizit 'public', damit server.js ihn findet
+# ACHTUNG: Passe 'dist' an 'build' an, falls du kein Vite nutzt!
+COPY --from=builder /app/frontend/dist ./public
+
+# 6. Starten
+EXPOSE 3000
+# Cloud Run injectet PORT, dein Server nutzt process.env.PORT (korrekt)
+CMD ["node", "server.js"]
