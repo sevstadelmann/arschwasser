@@ -44,56 +44,6 @@ const transporter = nodemailer.createTransport({
   }
 });
 
-// --- ORDER SUBMISSION ENDPOINT ---
-app.post('/api/submit-order', upload.single('id_document'), async (req, res) => {
-  try {
-    // 1. Check if file exists
-    const file = req.file;
-    if (!file) {
-      return res.status(400).json({ error: 'No ID document uploaded' });
-    }
-
-    // 2. Parse the text data
-    // Multer handles the file, but the rest of the data comes as a JSON string
-    const orderData = JSON.parse(req.body.order_data);
-
-    // 3. Send email to YOURSELF
-    await transporter.sendMail({
-      from: '"Shop System" <system@arschwasser.ch>',
-      to: 'severin.stadelmann@vestryx.com', // <--- PUT YOUR EMAIL HERE
-      subject: `New Order from ${orderData.shipping.firstName}`,
-      html: `
-        <h2>New Order Received (Invoice)</h2>
-        <p><strong>Customer:</strong> ${orderData.shipping.firstName} ${orderData.shipping.lastName}</p>
-        <p><strong>Address:</strong><br/>
-           ${orderData.shipping.address}<br/>
-           ${orderData.shipping.city}, ${orderData.shipping.zip}
-        </p>
-        <p><strong>Total Amount:</strong> CHF ${orderData.total.toFixed(2)}</p>
-        <hr/>
-        <h3>Items:</h3>
-        <ul>
-          ${orderData.cart.map(item => `<li>${item.quantity}x ${item.name} (CHF ${item.price})</li>`).join('')}
-        </ul>
-        <p><em>The user's ID is attached to this email.</em></p>
-      `,
-      attachments: [
-        {
-          filename: file.originalname,
-          content: file.buffer // This attaches the file from memory directly to the email
-        }
-      ]
-    });
-
-    console.log('Order email sent successfully');
-    res.json({ success: true });
-
-  } catch (error) {
-    console.error('Error processing order:', error);
-    res.status(500).json({ error: 'Failed to process order' });
-  }
-});
-
 // Support either API key env-var variant
 const apiKey = process.env.GEMINI_API_KEY || process.env.API_KEY;
 
@@ -242,10 +192,60 @@ app.get('*', (req, res) => {
     }
 });
 
+// --- ORDER SUBMISSION ENDPOINT ---
+app.post('/api/submit-order', upload.single('id_document'), async (req, res) => {
+  try {
+    // 1. Check if file exists
+    const file = req.file;
+    if (!file) {
+      return res.status(400).json({ error: 'No ID document uploaded' });
+    }
+
+    // 2. Parse the text data
+    // Multer handles the file, but the rest of the data comes as a JSON string
+    const orderData = JSON.parse(req.body.order_data);
+
+    // 3. Send email to YOURSELF
+    await transporter.sendMail({
+      from: '"Shop System" <system@arschwasser.ch>',
+      to: 'severin.stadelmann@vestryx.com', // <--- PUT YOUR EMAIL HERE
+      subject: `New Order from ${orderData.shipping.firstName}`,
+      html: `
+        <h2>New Order Received (Invoice)</h2>
+        <p><strong>Customer:</strong> ${orderData.shipping.firstName} ${orderData.shipping.lastName}</p>
+        <p><strong>Address:</strong><br/>
+           ${orderData.shipping.address}<br/>
+           ${orderData.shipping.city}, ${orderData.shipping.zip}
+        </p>
+        <p><strong>Total Amount:</strong> CHF ${orderData.total.toFixed(2)}</p>
+        <hr/>
+        <h3>Items:</h3>
+        <ul>
+          ${orderData.cart.map(item => `<li>${item.quantity}x ${item.name} (CHF ${item.price})</li>`).join('')}
+        </ul>
+        <p><em>The user's ID is attached to this email.</em></p>
+      `,
+      attachments: [
+        {
+          filename: file.originalname,
+          content: file.buffer // This attaches the file from memory directly to the email
+        }
+      ]
+    });
+
+    console.log('Order email sent successfully');
+    res.json({ success: true });
+
+  } catch (error) {
+    console.error('Error processing order:', error);
+    res.status(500).json({ error: 'Failed to process order' });
+  }
+});
+
 
 // --- SERVER START ---
-const server = app.listen(port, () => {
-    console.log(`Server listening on port ${port}`);
+const server = app.listen(port, '0.0.0.0', () => { 
+    console.log(`Server listening on port ${port} and host 0.0.0.0`);
     console.log(`HTTP/WS proxy active on /api-proxy/**`);
 });
 
