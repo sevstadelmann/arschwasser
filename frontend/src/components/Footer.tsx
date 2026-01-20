@@ -26,6 +26,7 @@ export const Footer: React.FC = () => {
         <div className="mt-12 flex flex-wrap justify-center md:justify-start gap-8 text-sm text-slate-400">
            <Link to="/imprint" className="hover:text-white">{t('footer.imprint')}</Link>
            <Link to="/privacy" className="hover:text-white">{t('footer.privacy')}</Link>
+           <Link to="/terms" className="hover:text-white">{t('footer.terms')}</Link>
            <Link to="/contact" className="hover:text-white">{t('footer.contact')}</Link>
         </div>
       </div>

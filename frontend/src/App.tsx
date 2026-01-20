@@ -7,7 +7,7 @@ import { CartDrawer } from './components/CartDrawer.tsx';
 import { CartProvider } from './context/CartContext.tsx';
 import { LanguageProvider } from './context/LanguageContext.tsx';
 import { Home } from './pages/Home.tsx';
-import { Imprint, Privacy } from './pages/Legal.tsx';
+import { Imprint, Privacy, Terms } from './pages/Legal.tsx';
 import { Contact } from './pages/Contact.tsx';
 import { Checkout } from './pages/Checkout.tsx';
 import { Loader } from './components/Loader.tsx';
@@ -36,8 +36,9 @@ function App() {
                 <Route path="/" element={<Home />} />
                 <Route path="/imprint" element={<Imprint />} />
                 <Route path="/privacy" element={<Privacy />} />
+                <Route path="/terms" element={<Terms />} />
                 <Route path="/contact" element={<Contact />} />
-                {/*<Route path="/checkout" element={<Checkout />} />*/}
+                <Route path="/checkout" element={<Checkout />} />
               </Routes>
             </main>
 

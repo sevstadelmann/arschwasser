@@ -32,3 +32,21 @@ export const Privacy: React.FC = () => {
     </div>
   );
 };
+
+export const Terms: React.FC = () => {
+  const { t } = useLanguage();
+  return (
+    <div className="container mx-auto px-6 py-32 max-w-3xl">
+      <h1 className="text-4xl brand-font mb-8">{t('legal.terms.title')}</h1>
+      <div className="space-y-4 text-slate-600">
+        <p>{t('legal.terms.intro')}</p>
+        <h2 className="text-xl font-bold text-slate-900 mt-6">{t('legal.terms.section1_title')}</h2>
+        <p>{t('legal.terms.section1_text')}</p>
+        <h2 className="text-xl font-bold text-slate-900 mt-6">{t('legal.terms.section2_title')}</h2>
+        <p>{t('legal.terms.section2_text')}</p>
+        <h2 className="text-xl font-bold text-slate-900 mt-6">{t('legal.terms.section3_title')}</h2>
+        <p>{t('legal.terms.section3_text')}</p>
+      </div>
+    </div>
+  );
+};

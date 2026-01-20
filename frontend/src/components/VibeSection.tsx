@@ -64,6 +64,7 @@ export const VibeSection: React.FC = () => {
               </motion.p>
               
               <motion.button 
+                onClick={(() => {  window.open('https://instagram.com/arschwasserofficial/', '_blank'); })}
                 whileHover={{ scale: 1.05, backgroundColor: "#ffffff" }}
                 whileTap={{ scale: 0.95 }}
                 className="mt-8 bg-[#FFD700] text-black px-8 py-4 rounded-full font-bold hover:text-[#23C4D8] transition-all text-lg shadow-[0_10px_20px_rgba(0,0,0,0.2)]"

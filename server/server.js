@@ -13,10 +13,86 @@ const WebSocket = require('ws');
 const { URLSearchParams, URL } = require('url');
 const rateLimit = require('express-rate-limit');
 
+const multer = require('multer');
+const nodemailer = require('nodemailer');
+const cors = require('cors'); // Ensure frontend can talk to backend
+require('dotenv').config(); // To load environment variables
+
 const app = express();
 const port = process.env.PORT || 3000;
 const externalApiBaseUrl = 'https://generativelanguage.googleapis.com';
 const externalWsBaseUrl = 'wss://generativelanguage.googleapis.com';
+
+app.use(cors()); // Allow requests from your React app
+app.use(express.json()); // Allow JSON body parsing
+
+// --- MULTER SETUP (Handles the image upload) ---
+// We use 'memoryStorage' so the file is held in RAM (buffer) briefly to attach to email
+const storage = multer.memoryStorage();
+const upload = multer({ 
+  storage: storage,
+  limits: { fileSize: 5 * 1024 * 1024 } // Limit file size to 5MB
+});
+
+// --- NODEMAILER SETUP (Handles sending email) ---
+// Replace these details with your actual email provider info
+const transporter = nodemailer.createTransport({
+  service: 'gmail', // Or 'hotmail', 'outlook', or your hosting SMTP
+  auth: {
+    user: process.env.EMAIL_USER, // Your email address
+    pass: process.env.EMAIL_PASS  // Your email password (or App Password)
+  }
+});
+
+// --- ORDER SUBMISSION ENDPOINT ---
+app.post('/api/submit-order', upload.single('id_document'), async (req, res) => {
+  try {
+    // 1. Check if file exists
+    const file = req.file;
+    if (!file) {
+      return res.status(400).json({ error: 'No ID document uploaded' });
+    }
+
+    // 2. Parse the text data
+    // Multer handles the file, but the rest of the data comes as a JSON string
+    const orderData = JSON.parse(req.body.order_data);
+
+    // 3. Send email to YOURSELF
+    await transporter.sendMail({
+      from: '"Shop System" <system@arschwasser.ch>',
+      to: 'severin.stadelmann@vestryx.com', // <--- PUT YOUR EMAIL HERE
+      subject: `New Order from ${orderData.shipping.firstName}`,
+      html: `
+        <h2>New Order Received (Invoice)</h2>
+        <p><strong>Customer:</strong> ${orderData.shipping.firstName} ${orderData.shipping.lastName}</p>
+        <p><strong>Address:</strong><br/>
+           ${orderData.shipping.address}<br/>
+           ${orderData.shipping.city}, ${orderData.shipping.zip}
+        </p>
+        <p><strong>Total Amount:</strong> CHF ${orderData.total.toFixed(2)}</p>
+        <hr/>
+        <h3>Items:</h3>
+        <ul>
+          ${orderData.cart.map(item => `<li>${item.quantity}x ${item.name} (CHF ${item.price})</li>`).join('')}
+        </ul>
+        <p><em>The user's ID is attached to this email.</em></p>
+      `,
+      attachments: [
+        {
+          filename: file.originalname,
+          content: file.buffer // This attaches the file from memory directly to the email
+        }
+      ]
+    });
+
+    console.log('Order email sent successfully');
+    res.json({ success: true });
+
+  } catch (error) {
+    console.error('Error processing order:', error);
+    res.status(500).json({ error: 'Failed to process order' });
+  }
+});
 
 // Support either API key env-var variant
 const apiKey = process.env.GEMINI_API_KEY || process.env.API_KEY;

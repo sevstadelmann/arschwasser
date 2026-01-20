@@ -30,9 +30,9 @@ export const Hero: React.FC = () => {
 
   const handleAddToCart = () => {
     addToCart({
-      id: 'lemon-drop-12',
+      id: 'lemon-drop-24',
       name: t('cart.item_name'),
-      price: 24.99,
+      price: 54.95,
       image: PRODUCT_IMAGE_URL
     });
   };
@@ -91,7 +91,7 @@ export const Hero: React.FC = () => {
             </p>
 
             <div className="flex flex-col md:flex-row items-center gap-4 justify-center">
-                {/*<motion.button 
+                <motion.button 
                   onClick={handleAddToCart}
                   whileHover={{ scale: 1.05 }}
                   whileTap={{ scale: 0.95 }}
@@ -99,7 +99,7 @@ export const Hero: React.FC = () => {
                 >
                   {t('hero.order')}
                 </motion.button>
-                */}
+                
                 <motion.button 
                   onClick={(() => { window.location.href = '/#/contact'; })}
                   whileHover={{ scale: 1.05 }}

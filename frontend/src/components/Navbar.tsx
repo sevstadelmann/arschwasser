@@ -39,7 +39,7 @@ export const Navbar: React.FC = () => {
 
   // Determine if we should use the dark navigation style (black text, colored logo)
   // This applies when scrolled OR when on pages with light backgrounds (Contact, Legal pages)
-  const lightBgPages = ['/contact', '/imprint', '/privacy', '/terms'];
+  const lightBgPages = ['/contact', '/imprint', '/privacy', '/terms', '/checkout'];
   const isLightBgPage = lightBgPages.includes(location.pathname);
   const isDarkState = scrolled || isLightBgPage;
 

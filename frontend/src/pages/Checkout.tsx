@@ -2,33 +2,35 @@ import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useCart } from '../context/CartContext';
 import { useLanguage } from '../context/LanguageContext';
-import { CheckCircle, ShieldCheck, Lock, CreditCard, Smartphone, AlertTriangle } from 'lucide-react'; // Added AlertTriangle
-import { useNavigate, useSearchParams } from 'react-router-dom'; // Added useSearchParams
+import { 
+  CheckCircle, 
+  ShieldCheck, 
+  Lock, 
+  Upload, 
+  FileText, 
+  AlertCircle,
+  Image as ImageIcon,
+  X
+} from 'lucide-react'; 
+import { useNavigate } from 'react-router-dom';
 
 type CheckoutStep = 'age' | 'shipping' | 'payment' | 'success';
 
-const SwissIDLogo = () => (
-<svg className='mr-2' width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-<rect width="24" height="24" rx="1" fill="#FE0000"/>
-<ellipse cx="12.1991" cy="6.07742" rx="2.06631" ry="2.07742" fill="white"/>
-<ellipse cx="6.06631" cy="12.2322" rx="2.06631" ry="2.07742" fill="white"/>
-<ellipse cx="12.1991" cy="12.2322" rx="2.06631" ry="2.07742" fill="white"/>
-<ellipse cx="18.3319" cy="12.2322" rx="2.06631" ry="2.07742" fill="white"/>
-<ellipse cx="12.1991" cy="18.387" rx="2.06631" ry="2.07742" fill="white"/>
-</svg>
-);
-
 export const Checkout: React.FC = () => {
-  const { items, cartTotal } = useCart();
+  const { items, cartTotal, clearCart } = useCart(); // Assuming clearCart exists in context
   const { t } = useLanguage();
   const navigate = useNavigate();
-  const [searchParams] = useSearchParams(); // Hook to read URL params
   
   const [step, setStep] = useState<CheckoutStep>('age');
-  const [isVerifying, setIsVerifying] = useState(false);
-  const [isPaying, setIsPaying] = useState(false);
-  const [verificationError, setVerificationError] = useState<string | null>(null);
+  const [isSubmitting, setIsSubmitting] = useState(false);
   
+  // ID Verification State
+  const [idImage, setIdImage] = useState<File | null>(null);
+  const [idPreview, setIdPreview] = useState<string | null>(null);
+
+  // Payment/Terms State
+  const [termsAccepted, setTermsAccepted] = useState(false);
+
   // Shipping State
   const [shippingInfo, setShippingInfo] = useState({
     firstName: '',
@@ -38,34 +40,32 @@ export const Checkout: React.FC = () => {
     zip: ''
   });
 
-  // 1. Check for verification result on load
   useEffect(() => {
-    const status = searchParams.get('verification');
-    
-    if (status === 'success') {
-      setStep('shipping');
-      // Optional: Clean URL so a refresh doesn't re-trigger
-      window.history.replaceState({}, document.title, window.location.pathname);
-    } else if (status === 'underage') {
-      setVerificationError("You must be 18+ to purchase these items.");
-      setStep('age');
-    } else if (status === 'failed' || status === 'error') {
-      setVerificationError("Verification failed. Please try again.");
-      setStep('age');
-    }
-
     if (items.length === 0 && step !== 'success') {
       navigate('/');
     }
-  }, [items, navigate, step, searchParams]);
+    // Cleanup preview URL on unmount
+    return () => {
+      if (idPreview) URL.revokeObjectURL(idPreview);
+    };
+  }, [items, navigate, step, idPreview]);
 
-  const handleSwissIDVerify = () => {
-    setIsVerifying(true);
-    setVerificationError(null);
-    
-    // Redirect to your Backend Authentication Route
-    // This will redirect the user to SwissID, and then back to your app
-    window.location.href = 'http://localhost:3000/auth/swissid';
+  // Handle File Selection
+  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    if (e.target.files && e.target.files[0]) {
+      const file = e.target.files[0];
+      setIdImage(file);
+      setIdPreview(URL.createObjectURL(file));
+    }
+  };
+
+  const clearFile = () => {
+    setIdImage(null);
+    setIdPreview(null);
+  };
+
+  const handleAgeSubmit = () => {
+    if (idImage) setStep('shipping');
   };
 
   const handleShippingSubmit = (e: React.FormEvent) => {
@@ -73,12 +73,53 @@ export const Checkout: React.FC = () => {
     setStep('payment');
   };
 
-  const handlePayment = () => {
-    setIsPaying(true);
-    setTimeout(() => {
-      setIsPaying(false);
+  // Final Order Submission
+  const handleSubmitOrder = async () => {
+    if (!termsAccepted) return;
+    setIsSubmitting(true);
+
+    try {
+      // 1. Construct FormData to send file + data
+      const formData = new FormData();
+      
+      // Append the ID Image
+      if (idImage) {
+        formData.append('id_document', idImage);
+      }
+
+      // Append Order Details
+      const orderData = {
+        shipping: shippingInfo,
+        cart: items,
+        total: cartTotal,
+        paymentMethod: 'invoice'
+      };
+      
+      formData.append('order_data', JSON.stringify(orderData));
+
+      // 2. Send to your backend (You need to implement this endpoint)
+      // The backend will use Nodemailer/SendGrid to email the attachment to you
+      /* const response = await fetch('http://localhost:3000/api/submit-order', {
+        method: 'POST',
+        body: formData,
+      });
+      
+      if (!response.ok) throw new Error('Order failed');
+      */
+
+      // SIMULATION: Simulate API delay for now
+      await new Promise(resolve => setTimeout(resolve, 2000));
+
+      // 3. Success
+      if (clearCart) clearCart(); // clear cart logic
       setStep('success');
-    }, 2000);
+      
+    } catch (error) {
+      console.error("Error submitting order:", error);
+      alert("There was an error placing your order. Please try again.");
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   const getStepProgress = () => {
@@ -116,7 +157,7 @@ export const Checkout: React.FC = () => {
           <div className="lg:col-span-2">
             <AnimatePresence mode="wait">
               
-              {/* Step 1: Age Verification */}
+              {/* Step 1: Age Verification (File Upload) */}
               {step === 'age' && (
                 <motion.div
                   key="age"
@@ -125,8 +166,8 @@ export const Checkout: React.FC = () => {
                   exit={{ opacity: 0, x: 20 }}
                   className="bg-white p-8 rounded-3xl shadow-lg border border-slate-100"
                 >
-                  <div className="text-center py-12">
-                    <div className="w-20 h-20 bg-red-50 text-red-600 rounded-full flex items-center justify-center mx-auto mb-6">
+                  <div className="text-center py-8">
+                    <div className="w-20 h-20 bg-blue-50 text-blue-600 rounded-full flex items-center justify-center mx-auto mb-6">
                       <ShieldCheck size={40} />
                     </div>
                     <h2 className="text-3xl brand-font mb-4">{t('checkout.age.title')}</h2>
@@ -134,39 +175,61 @@ export const Checkout: React.FC = () => {
                       {t('checkout.age.desc')}
                     </p>
 
-                    {/* Error Display */}
-                    {verificationError && (
-                      <div className="mb-6 p-4 bg-red-50 border border-red-200 rounded-xl flex items-center justify-center gap-3 text-red-700">
-                        <AlertTriangle size={20} />
-                        <span className="font-bold">{verificationError}</span>
-                      </div>
-                    )}
-                    
-                    <button
-                      onClick={handleSwissIDVerify}
-                      disabled={isVerifying}
-                      className="bg-red-600 text-white px-8 py-4 rounded-xl font-bold text-lg hover:bg-red-700 transition-colors flex items-center justify-center mx-auto shadow-lg shadow-red-200 min-w-[280px]"
-                    >
-                      {isVerifying ? (
-                        <div className="flex items-center gap-2">
-                          <div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin" />
-                          Redirecting...
+                    {/* File Upload Area */}
+                    <div className="max-w-md mx-auto">
+                      {!idPreview ? (
+                        <div className="border-2 border-dashed border-slate-300 rounded-2xl p-8 hover:bg-slate-50 transition-colors cursor-pointer relative">
+                          <input 
+                            type="file" 
+                            accept="image/*"
+                            onChange={handleFileChange}
+                            className="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
+                          />
+                          <div className="flex flex-col items-center text-slate-400">
+                            <Upload size={32} className="mb-2" />
+                            <span className="font-bold text-slate-600">{t('checkout.age.upload')}</span>
+                            <span className="text-xs mt-1">JPG, PNG up to 5MB</span>
+                          </div>
                         </div>
                       ) : (
-                        <>
-                          <SwissIDLogo />
-                          {t('checkout.age.swissid_btn')}
-                        </>
+                        <div className="relative rounded-2xl overflow-hidden border-2 border-[#23C4D8] bg-slate-50">
+                          <img src={idPreview} alt="ID Preview" className="w-full h-48 object-cover opacity-80" />
+                          <div className="absolute inset-0 flex items-center justify-center bg-black/10">
+                            <div className="bg-white px-4 py-2 rounded-full flex items-center gap-2 shadow-sm">
+                              <ImageIcon size={16} className="text-[#23C4D8]" />
+                              <span className="text-sm font-bold">Image Selected</span>
+                            </div>
+                          </div>
+                          <button 
+                            onClick={clearFile}
+                            className="absolute top-2 right-2 w-8 h-8 bg-white rounded-full flex items-center justify-center text-red-500 shadow-md hover:bg-red-50"
+                          >
+                            <X size={16} />
+                          </button>
+                        </div>
                       )}
+                    </div>
+                    
+                    <button
+                      onClick={handleAgeSubmit}
+                      disabled={!idImage}
+                      className={`mt-8 px-8 py-4 rounded-xl font-bold text-lg transition-colors flex items-center justify-center mx-auto min-w-[200px] ${
+                        idImage 
+                        ? 'bg-[#23C4D8] text-white hover:bg-[#1ab0c2] shadow-lg shadow-cyan-100' 
+                        : 'bg-slate-200 text-slate-400 cursor-not-allowed'
+                      }`}
+                    >
+                      {t('checkout.age.continue')}
                     </button>
+
                     <p className="mt-6 text-xs text-slate-400 flex items-center justify-center gap-1">
-                      <Lock size={12} /> Secure verification via SwissID
+                      <Lock size={12} /> {t('checkout.age.disclaimer')}
                     </p>
                   </div>
                 </motion.div>
               )}
 
-              {/* Step 2: Shipping Info - Added Basic Validation */}
+              {/* Step 2: Shipping Info (Unchanged Logic) */}
               {step === 'shipping' && (
                 <motion.div
                   key="shipping"
@@ -243,7 +306,7 @@ export const Checkout: React.FC = () => {
                 </motion.div>
               )}
 
-              {/* ... Payment and Success Steps remain the same ... */}
+              {/* Step 3: Payment (Invoice Only) */}
               {step === 'payment' && (
                 <motion.div
                   key="payment"
@@ -254,41 +317,71 @@ export const Checkout: React.FC = () => {
                 >
                   <h2 className="text-2xl brand-font mb-6">{t('checkout.payment.title')}</h2>
                   
-                  {/* ... Mock Payment UI ... */}
-                  <div className="space-y-4 mb-8">
-                    <label className="flex items-center gap-4 p-4 border-2 border-[#23C4D8] bg-cyan-50/30 rounded-xl cursor-pointer">
-                      <input type="radio" name="payment" defaultChecked className="w-5 h-5 text-[#23C4D8] focus:ring-[#23C4D8]" />
-                      <div className="flex items-center gap-3 flex-1">
-                        <CreditCard className="text-slate-700" />
-                        <span className="font-bold text-slate-700">{t('checkout.payment.card')}</span>
+                  {/* Payment Method Selection */}
+                  <div className="mb-8">
+                    <label className="block text-sm font-bold text-slate-700 mb-4 ml-2">{t('checkout.payment.subtitle')}</label>
+                    <div className="flex items-center gap-4 p-4 border-2 border-[#23C4D8] bg-cyan-50/50 rounded-2xl">
+                       <div className="w-10 h-10 bg-[#23C4D8] text-white rounded-full flex items-center justify-center">
+                          <FileText size={20} />
+                       </div>
+                       <div>
+                         <p className="font-bold text-slate-800">{t('checkout.payment.invoice')}</p>
+                         <p className="text-sm text-slate-500">{t('checkout.payment.invoiceNotice')}</p>
+                       </div>
+                    </div>
+                  </div>
+
+                  {/* Disclaimer */}
+                  <div className="bg-amber-50 border border-amber-200 rounded-2xl p-4 flex gap-3 text-amber-800 mb-6">
+                    <AlertCircle className="shrink-0" size={24} />
+                    <p className="text-sm leading-relaxed">
+                      <strong>{t('checkout.payment.noticeBold')}</strong> {t('checkout.payment.notice')}
+                    </p>
+                  </div>
+
+                  {/* Confirmation Checkbox */}
+                  <div className="mb-8">
+                    <label className="flex items-start gap-3 cursor-pointer group">
+                      <div className="relative flex items-center">
+                        <input 
+                          type="checkbox" 
+                          className="peer sr-only"
+                          checked={termsAccepted}
+                          onChange={(e) => setTermsAccepted(e.target.checked)}
+                        />
+                        <div className="w-6 h-6 border-2 border-slate-300 rounded-lg peer-checked:bg-[#23C4D8] peer-checked:border-[#23C4D8] transition-all" />
+                        <CheckCircle size={16} className="absolute left-1 text-white opacity-0 peer-checked:opacity-100 transition-opacity" />
                       </div>
-                    </label>
-                    <label className="flex items-center gap-4 p-4 border-2 border-slate-100 rounded-xl cursor-pointer hover:bg-slate-50">
-                      <input type="radio" name="payment" className="w-5 h-5 text-[#23C4D8] focus:ring-[#23C4D8]" />
-                      <div className="flex items-center gap-3 flex-1">
-                        <Smartphone className="text-slate-700" />
-                        <span className="font-bold text-slate-700">{t('checkout.payment.twint')}</span>
-                      </div>
+                      <span className="text-sm text-slate-600 group-hover:text-slate-800 transition-colors pt-0.5">
+                        {t('checkout.payment.acceptFirst')}
+                        <a href="/terms-of-service" className="underline cursor-pointer mx-1">{t('checkout.payment.acceptSecond')}</a> 
+                        {t('checkout.payment.acceptThird')}
+                      </span>
                     </label>
                   </div>
 
-                  <div className="space-y-4 opacity-70 pointer-events-none mb-8">
-                     <input type="text" placeholder="0000 0000 0000 0000" className="w-full px-6 py-3 bg-slate-50 border border-slate-200 rounded-xl" />
-                     <div className="grid grid-cols-2 gap-4">
-                        <input type="text" placeholder="MM/YY" className="w-full px-6 py-3 bg-slate-50 border border-slate-200 rounded-xl" />
-                        <input type="text" placeholder="CVC" className="w-full px-6 py-3 bg-slate-50 border border-slate-200 rounded-xl" />
-                     </div>
-                  </div>
-
+                  {/* Submit Button */}
                   <button 
-                    onClick={handlePayment}
-                    disabled={isPaying}
-                    className="w-full bg-slate-900 text-white py-4 rounded-xl font-bold text-lg hover:bg-[#23C4D8] transition-colors"
+                    onClick={handleSubmitOrder}
+                    disabled={!termsAccepted || isSubmitting}
+                    className={`w-full py-4 rounded-xl font-bold text-lg transition-all flex items-center justify-center gap-2 ${
+                      termsAccepted && !isSubmitting
+                      ? 'bg-slate-900 text-white hover:bg-[#23C4D8]' 
+                      : 'bg-slate-200 text-slate-400 cursor-not-allowed'
+                    }`}
                   >
-                     {isPaying ? t('checkout.payment.processing') : t('checkout.payment.pay')}
+                    {isSubmitting ? (
+                      <>
+                        <div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+                        Processing...
+                      </>
+                    ) : (
+                      'Confirm Order'
+                    )}
                   </button>
                 </motion.div>
               )}
+
 
               {/* Step 4: Success */}
               {step === 'success' && (
@@ -307,7 +400,9 @@ export const Checkout: React.FC = () => {
                   </motion.div>
                   <h2 className="text-4xl brand-font mb-4">{t('checkout.success.title')}</h2>
                   <p className="text-slate-500 mb-8 text-lg">
-                    {t('checkout.success.desc')}
+                    Order received! We are reviewing your ID document. 
+                    <br />
+                    You will receive an email confirmation shortly.
                   </p>
                   <button 
                     onClick={() => navigate('/')}
