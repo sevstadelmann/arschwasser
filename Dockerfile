@@ -36,6 +36,6 @@ COPY server/server.js ./
 COPY --from=builder /app/frontend/build ./public
 
 # 6. Starten
-EXPOSE 3000
+EXPOSE 8080
 # Cloud Run injectet PORT, dein Server nutzt process.env.PORT (korrekt)
 CMD ["node", "server.js"]
