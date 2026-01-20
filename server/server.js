@@ -192,6 +192,39 @@ app.get('*', (req, res) => {
     }
 });
 
+// --- CONTACT FORM ENDPOINT ---
+app.post('/api/submit-contact', async (req, res) => {
+  try {
+    const { name, email, message } = req.body;
+
+    if (!name || !email || !message) {
+      return res.status(400).json({ error: 'Missing required fields' });
+    }
+
+    await transporter.sendMail({
+      from: '"Contact Form" <system@arschwasser.ch>',
+      to: 'severin.stadelmann@vestryx.com',
+      replyTo: email,
+      subject: `New Contact Form Message from ${name}`,
+      html: `
+        <h2>New Contact Form Submission</h2>
+        <p><strong>Name:</strong> ${name}</p>
+        <p><strong>Email:</strong> ${email}</p>
+        <hr/>
+        <p><strong>Message:</strong></p>
+        <p>${message.replace(/\n/g, '<br/>')}</p>
+      `
+    });
+
+    console.log('Contact form email sent successfully');
+    res.json({ success: true });
+
+  } catch (error) {
+    console.error('Error processing contact form:', error);
+    res.status(500).json({ error: 'Failed to process contact form' });
+  }
+});
+
 // --- ORDER SUBMISSION ENDPOINT ---
 app.post('/api/submit-order', upload.single('id_document'), async (req, res) => {
   try {

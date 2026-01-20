@@ -97,18 +97,13 @@ export const Checkout: React.FC = () => {
       
       formData.append('order_data', JSON.stringify(orderData));
 
-      // 2. Send to your backend (You need to implement this endpoint)
-      // The backend will use Nodemailer/SendGrid to email the attachment to you
-      /* const response = await fetch('http://localhost:3000/api/submit-order', {
+      // 2. Send to your backend
+      const response = await fetch('/api/submit-order', {
         method: 'POST',
         body: formData,
       });
       
       if (!response.ok) throw new Error('Order failed');
-      */
-
-      // SIMULATION: Simulate API delay for now
-      await new Promise(resolve => setTimeout(resolve, 2000));
 
       // 3. Success
       if (clearCart) clearCart(); // clear cart logic
