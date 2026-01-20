@@ -177,21 +177,6 @@ app.get('/service-worker.js', (req, res) => {
    }
 });
 
-// 3. Catch-All Route für SPA (React Router Fix)
-// Alles was nicht /api-proxy ist und keine statische Datei war, liefert die index.html
-app.get('*', (req, res) => {
-    // Sicherheitsnetz: Falls API-Calls durchrutschen, nicht HTML zurückgeben
-    if (req.path.startsWith('/api-proxy')) return res.status(404).send('API endpoint not found');
-
-    const indexPath = path.join(frontendBuildPath, 'index.html');
-    if (fs.existsSync(indexPath)) {
-        res.sendFile(indexPath);
-    } else {
-        console.error("CRITICAL: index.html not found at:", indexPath);
-        res.status(404).send(`Application not built correctly. Looking for index.html in ${frontendBuildPath}`);
-    }
-});
-
 // --- CONTACT FORM ENDPOINT ---
 app.post('/api/submit-contact', async (req, res) => {
   try {
@@ -199,6 +184,11 @@ app.post('/api/submit-contact', async (req, res) => {
 
     if (!name || !email || !message) {
       return res.status(400).json({ error: 'Missing required fields' });
+    }
+
+    if (!process.env.EMAIL_USER || !process.env.EMAIL_PASS) {
+      console.error('Email credentials not configured');
+      return res.status(500).json({ error: 'Email service not configured' });
     }
 
     await transporter.sendMail({
@@ -221,7 +211,7 @@ app.post('/api/submit-contact', async (req, res) => {
 
   } catch (error) {
     console.error('Error processing contact form:', error);
-    res.status(500).json({ error: 'Failed to process contact form' });
+    res.status(500).json({ error: 'Failed to process contact form', details: error.message });
   }
 });
 
@@ -232,6 +222,11 @@ app.post('/api/submit-order', upload.single('id_document'), async (req, res) => 
     const file = req.file;
     if (!file) {
       return res.status(400).json({ error: 'No ID document uploaded' });
+    }
+
+    if (!process.env.EMAIL_USER || !process.env.EMAIL_PASS) {
+      console.error('Email credentials not configured');
+      return res.status(500).json({ error: 'Email service not configured' });
     }
 
     // 2. Parse the text data
@@ -271,8 +266,23 @@ app.post('/api/submit-order', upload.single('id_document'), async (req, res) => 
 
   } catch (error) {
     console.error('Error processing order:', error);
-    res.status(500).json({ error: 'Failed to process order' });
+    res.status(500).json({ error: 'Failed to process order', details: error.message });
   }
+});
+
+// 3. Catch-All Route für SPA (React Router Fix) - MUST BE LAST
+// Alles was nicht /api-proxy ist und keine statische Datei war, liefert die index.html
+app.get('*', (req, res) => {
+    // Sicherheitsnetz: Falls API-Calls durchrutschen, nicht HTML zurückgeben
+    if (req.path.startsWith('/api-proxy')) return res.status(404).send('API endpoint not found');
+
+    const indexPath = path.join(frontendBuildPath, 'index.html');
+    if (fs.existsSync(indexPath)) {
+        res.sendFile(indexPath);
+    } else {
+        console.error("CRITICAL: index.html not found at:", indexPath);
+        res.status(404).send(`Application not built correctly. Looking for index.html in ${frontendBuildPath}`);
+    }
 });
 
 
