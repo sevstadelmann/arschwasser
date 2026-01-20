@@ -22,7 +22,7 @@ ENV NODE_ENV=production
 # 3. Server-Dependencies installieren (Cache effizient nutzen)
 # Wir kopieren erst nur package.json aus dem server-Ordner
 COPY server/package.json ./
-RUN npm install --only=production
+RUN npm install
 
 # 4. Den Server-Code kopieren
 # Wir kopieren server.js direkt ins Root von /app
