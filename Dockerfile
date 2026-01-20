@@ -9,8 +9,7 @@ COPY . .
 WORKDIR /app/frontend
 RUN npm install --legacy-peer-deps
 RUN npm run build
-# HINWEIS: Prüfe, ob hier ein Ordner 'dist' oder 'build' entsteht! 
-# Vite = dist, CRA = build. Ich gehe unten von 'dist' aus.
+# Frontend outputs to 'build' folder (Create React App)
 
 # --- Stage 2: Production ---
 FROM node:22-alpine
@@ -21,7 +20,7 @@ ENV NODE_ENV=production
 
 # 3. Server-Dependencies installieren (Cache effizient nutzen)
 # Wir kopieren erst nur package.json aus dem server-Ordner
-COPY server/package.json ./
+COPY server/package.json ./package.json
 RUN npm install
 
 # 4. Den Server-Code kopieren
