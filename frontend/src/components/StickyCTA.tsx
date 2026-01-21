@@ -39,7 +39,7 @@ export const StickyCTA: React.FC = () => {
           <div className="flex items-center justify-between gap-4">
              <div className="flex flex-col">
                <span className="font-bold text-slate-900">{t('cart.item_name')}</span>
-               <span className="text-sm text-slate-500">CHF 54.99</span>
+               <span className="text-sm text-slate-500">CHF 54.95</span>
              </div>
              <button 
                onClick={handleAddToCart}
