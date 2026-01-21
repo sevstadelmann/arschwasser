@@ -20,9 +20,9 @@ export const StickyCTA: React.FC = () => {
 
   const handleAddToCart = () => {
     addToCart({
-      id: 'lemon-drop-12',
+      id: 'lemon-drop-24',
       name: t('cart.item_name'),
-      price: 24.99,
+      price: 54.99,
       image: PRODUCT_IMAGE_URL
     });
   };

@@ -371,7 +371,7 @@ export const Checkout: React.FC = () => {
                         Processing...
                       </>
                     ) : (
-                      'Confirm Order'
+                      {t('checkout.payment.placeOrder')}
                     )}
                   </button>
                 </motion.div>
