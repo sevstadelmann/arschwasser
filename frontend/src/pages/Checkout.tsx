@@ -368,10 +368,10 @@ export const Checkout: React.FC = () => {
                     {isSubmitting ? (
                       <>
                         <div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin" />
-                        Processing...
+                        {t('checkout.payment.processing')}
                       </>
                     ) : (
-                      {t('checkout.payment.placeOrder')}
+                      t('checkout.payment.placeOrder')
                     )}
                   </button>
                 </motion.div>
