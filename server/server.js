@@ -218,9 +218,14 @@ app.post('/api/submit-contact', async (req, res) => {
 // --- ORDER SUBMISSION ENDPOINT ---
 app.post('/api/submit-order', upload.single('id_document'), async (req, res) => {
   try {
+    console.log('Order submission received');
+    console.log('File:', req.file ? 'Yes' : 'No');
+    console.log('Body keys:', Object.keys(req.body));
+    
     // 1. Check if file exists
     const file = req.file;
     if (!file) {
+      console.error('No ID document uploaded');
       return res.status(400).json({ error: 'No ID document uploaded' });
     }
 
@@ -231,7 +236,14 @@ app.post('/api/submit-order', upload.single('id_document'), async (req, res) => 
 
     // 2. Parse the text data
     // Multer handles the file, but the rest of the data comes as a JSON string
-    const orderData = JSON.parse(req.body.order_data);
+    let orderData;
+    try {
+      orderData = JSON.parse(req.body.order_data);
+      console.log('Order data parsed successfully');
+    } catch (parseError) {
+      console.error('Failed to parse order_data:', parseError);
+      return res.status(400).json({ error: 'Invalid order data format', details: parseError.message });
+    }
 
     // 3. Send email to YOURSELF
     await transporter.sendMail({
