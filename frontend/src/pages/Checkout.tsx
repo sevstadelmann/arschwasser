@@ -35,6 +35,7 @@ export const Checkout: React.FC = () => {
   const [shippingInfo, setShippingInfo] = useState({
     firstName: '',
     lastName: '',
+    email: '',
     address: '',
     city: '',
     zip: ''
@@ -258,6 +259,17 @@ export const Checkout: React.FC = () => {
                           onChange={e => setShippingInfo({...shippingInfo, lastName: e.target.value})}
                         />
                       </div>
+                    </div>
+                    <div>
+                      <label className="block text-sm font-bold text-slate-700 mb-2 ml-2">Email</label>
+                      <input 
+                        type="email" 
+                        required 
+                        className="w-full px-6 py-4 bg-slate-50 border-2 border-slate-100 rounded-2xl focus:outline-none focus:border-[#23C4D8] valid:border-green-100"
+                        value={shippingInfo.email}
+                        onChange={e => setShippingInfo({...shippingInfo, email: e.target.value})}
+                        placeholder="your.email@example.com"
+                      />
                     </div>
                     <div>
                       <label className="block text-sm font-bold text-slate-700 mb-2 ml-2">{t('checkout.form.address')}</label>
