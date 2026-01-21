@@ -44,6 +44,11 @@ const transporter = nodemailer.createTransport({
   }
 });
 
+console.log('Email configuration:', {
+  user: process.env.EMAIL_USER ? 'SET' : 'NOT SET',
+  pass: process.env.EMAIL_PASS ? 'SET' : 'NOT SET'
+});
+
 // Support either API key env-var variant
 const apiKey = process.env.GEMINI_API_KEY || process.env.API_KEY;
 
