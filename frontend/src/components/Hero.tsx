@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { motion, useScroll, useTransform } from 'framer-motion';
 import { PRODUCT_IMAGE_URL } from '../constants';
-import { Leaf, Waves, Zap, ArrowDown, Contact } from 'lucide-react';
+import { Leaf, Waves, Zap, ArrowDown, Contact, Cross } from 'lucide-react';
 import { useCart } from '../context/CartContext';
 import { useLanguage } from '../context/LanguageContext';
 import { HeroModel } from './HeroModel';
@@ -108,17 +108,28 @@ export const Hero: React.FC = () => {
                 >
                   {t('hero.contact')}
                 </motion.button>
-                
-                <div className="flex gap-3">
-                  {[
-                    { text: t('hero.vegan'), icon: Leaf },
-                  ].map((badge, i) => (
-                     <div key={i} className="flex items-center gap-1.5 px-4 py-2 rounded-full bg-white/10 backdrop-blur-md border border-white/20 text-white text-sm font-semibold">
-                       <badge.icon size={14} className="text-[#FFD700]" />
-                       {badge.text}
-                     </div>
-                  ))}
-                </div>
+            </div>
+            <div className="flex flex-row items-center gap-4 justify-center">
+              <div className="flex gap-3">
+                {[
+                  { text: t('hero.vegan'), icon: Leaf },
+                ].map((badge, i) => (
+                    <div key={i} className="flex items-center gap-1.5 px-4 py-2 rounded-full bg-white/10 backdrop-blur-md border border-white/20 text-white text-sm font-semibold">
+                      <badge.icon size={14} className="text-[#FFD700]" />
+                      {badge.text}
+                    </div>
+                ))}
+              </div>
+              <div className="flex gap-3">
+                {[
+                  { text: t('hero.swiss'), icon: Cross },
+                ].map((badge, i) => (
+                    <div key={i} className="flex items-center gap-1.5 px-4 py-2 rounded-full bg-white/10 backdrop-blur-md border border-white/20 text-white text-sm font-semibold">
+                      <badge.icon size={14} className="text-[#FFD700]" />
+                      {badge.text}
+                    </div>
+                ))}
+              </div>
             </div>
         </motion.div>
 

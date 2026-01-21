@@ -21,6 +21,7 @@ const translations: Record<Language, Record<string, string>> = {
     'hero.order': 'Order 24-Pack',
     'hero.contact': 'Contact Us',
     'hero.vegan': 'Vegan',
+    'hero.swiss': 'Swiss Made',
     
     'marquee1.text': 'LEMON DROP • REFRESHING • 4.7% VOL • TASTES BETTER THAN IT SOUNDS ',
     
@@ -158,6 +159,7 @@ const translations: Record<Language, Record<string, string>> = {
     'hero.order': '24er-Pack bestellen',
     'hero.contact': 'Kontaktiere Uns',
     'hero.vegan': 'Vegan',
+    'hero.swiss': 'Schweizer Produkt',
     
     'marquee1.text': 'LEMON DROP • ERFRISCHEND • 4,7% VOL • TASTES BETTER THAN IT SOUNDS ',
     
