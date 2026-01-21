@@ -55,7 +55,7 @@ const isProduction = process.env.NODE_ENV === 'production';
 // WICHTIG: Prüfe, ob dein Build-Ordner 'dist' oder 'build' heißt und pass es hier ggf. an!
 const frontendBuildPath = isProduction
     ? path.join(__dirname, 'public')
-    : path.join(__dirname, '..', 'frontend', 'dist'); 
+    : path.join(__dirname, '..', 'frontend', 'build'); 
 
 console.log(`Running in ${isProduction ? 'Production' : 'Development'} mode`);
 console.log("Serving static files from:", frontendBuildPath);
