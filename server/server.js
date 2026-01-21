@@ -258,6 +258,7 @@ app.post('/api/submit-order', upload.single('id_document'), async (req, res) => 
       html: `
         <h2>New Order Received (Invoice)</h2>
         <p><strong>Customer:</strong> ${orderData.shipping.firstName} ${orderData.shipping.lastName}</p>
+        <p><strong>Email:</strong> ${orderData.shipping.email}</p>
         <p><strong>Address:</strong><br/>
            ${orderData.shipping.address}<br/>
            ${orderData.shipping.city}, ${orderData.shipping.zip}
