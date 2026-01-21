@@ -407,9 +407,9 @@ export const Checkout: React.FC = () => {
                   </motion.div>
                   <h2 className="text-4xl brand-font mb-4">{t('checkout.success.title')}</h2>
                   <p className="text-slate-500 mb-8 text-lg">
-                    Order received! We are reviewing your ID document. 
+                    {t('checkout.success.descFirst')}<br />
                     <br />
-                    You will receive an email confirmation shortly.
+                    {t('checkout.success.descSecond')}
                   </p>
                   <button 
                     onClick={() => navigate('/')}

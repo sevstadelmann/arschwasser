@@ -144,6 +144,8 @@ const translations: Record<Language, Record<string, string>> = {
     'checkout.payment.pay': 'Pay Now',
     'checkout.payment.placeOrder': 'Confirm Order',
     'checkout.payment.processing': 'Processing...',
+    'checkout.success.descFirst': 'Order received! We are reviewing your ID document.',
+    'checkout.success.descSecond': 'You will receive an email confirmation shortly.',
     'checkout.success.title': 'Order Confirmed!',
     'checkout.success.desc': 'Thank you for your order. Your Arschwasser is on its way.',
     'checkout.success.home': 'Back to Home'
@@ -284,6 +286,8 @@ const translations: Record<Language, Record<string, string>> = {
     'checkout.payment.placeOrder': 'Bestellung bestätigen',
     'checkout.payment.processing': 'Verarbeitung...',
     'checkout.success.title': 'Bestellung bestätigt!',
+    'checkout.success.descFirst': 'Bestellung erhalten! Wir überprüfen dein Ausweisdokument.',
+    'checkout.success.descSecond': 'Du wirst in Kürze eine Bestätigungs-E-Mail erhalten.',
     'checkout.success.desc': 'Danke für deine Bestellung. Dein Arschwasser ist auf dem Weg.',
     'checkout.success.home': 'Zurück zur Startseite'
   }
