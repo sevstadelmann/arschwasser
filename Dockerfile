@@ -26,6 +26,8 @@ RUN npm install
 # 4. Den Server-Code kopieren
 # Wir kopieren server.js direkt ins Root von /app
 COPY server/server.js ./
+# Kopiere auch die .env Datei
+COPY server/.env ./
 # Falls du weitere Server-Dateien hast (z.B. utils.js), kopiere den ganzen Ordner:
 # COPY server/ ./
 
