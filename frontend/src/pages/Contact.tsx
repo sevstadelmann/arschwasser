@@ -88,7 +88,7 @@ export const Contact: React.FC = () => {
                  */}
                  <div className="flex items-center gap-4 text-slate-600">
                     <Mail className="shrink-0 text-[#23C4D8]" />
-                    <span>hello@arschwasser.com</span>
+                    <span>hello@vestryx.com</span>
                  </div>
               </div>
             </div>
