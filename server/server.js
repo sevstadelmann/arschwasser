@@ -17,6 +17,7 @@ const multer = require('multer');
 const nodemailer = require('nodemailer');
 const cors = require('cors'); // Ensure frontend can talk to backend
 require('dotenv').config(); // To load environment variables
+const gcpSecrets = require('./gcpSecrets');
 
 const app = express();
 const port = process.env.PORT || 3000;
@@ -35,19 +36,9 @@ const upload = multer({
 });
 
 // --- NODEMAILER SETUP (Handles sending email) ---
-// Replace these details with your actual email provider info
-const transporter = nodemailer.createTransport({
-  service: 'gmail', // Or 'hotmail', 'outlook', or your hosting SMTP
-  auth: {
-    user: process.env.EMAIL_USER, // Your email address
-    pass: process.env.EMAIL_PASS  // Your email password (or App Password)
-  }
-});
-
-console.log('Email configuration:', {
-  user: process.env.EMAIL_USER ? 'SET' : 'NOT SET',
-  pass: process.env.EMAIL_PASS ? 'SET' : 'NOT SET'
-});
+// Transporter will be created after secrets are loaded so credentials
+// can come either from .env (local) or GCP Secret Manager (production)
+let transporter;
 
 // Support either API key env-var variant
 const apiKey = process.env.GEMINI_API_KEY || process.env.API_KEY;
@@ -305,72 +296,104 @@ app.get('*', (req, res) => {
 
 
 // --- SERVER START ---
-const server = app.listen(port, '0.0.0.0', () => { 
-    console.log(`Server listening on port ${port} and host 0.0.0.0`);
-    console.log(`HTTP/WS proxy active on /api-proxy/**`);
-});
+let server;
+
+(async function initServer() {
+    try {
+        await gcpSecrets.init();
+    } catch (err) {
+        console.error('Proceeding even though GCP secret loading failed:', err.message || err);
+    }
+
+    // Now create the transporter using whatever is present in process.env
+    transporter = nodemailer.createTransport({
+      service: 'gmail',
+      auth: {
+        user: process.env.EMAIL_USER,
+        pass: process.env.EMAIL_PASS
+      }
+    });
+
+    console.log('Email configuration:', {
+      user: process.env.EMAIL_USER ? 'SET' : 'NOT SET',
+      pass: process.env.EMAIL_PASS ? 'SET' : 'NOT SET'
+    });
+
+    server = app.listen(port, '0.0.0.0', () => { 
+        console.log(`Server listening on port ${port} and host 0.0.0.0`);
+        console.log(`HTTP/WS proxy active on /api-proxy/**`);
+    });
+    // Attach websocket proxy now that server is available
+    try {
+      attachWebsocketProxy(server);
+    } catch (e) {
+      console.error('Failed to attach websocket proxy:', e);
+    }
+})();
 
 
-// --- WEBSOCKET PROXY (Unverändert) ---
-const wss = new WebSocket.Server({ noServer: true });
+// --- WEBSOCKET PROXY (attached after server start) ---
+function attachWebsocketProxy(serverInstance) {
+  const wss = new WebSocket.Server({ noServer: true });
 
-server.on('upgrade', (request, socket, head) => {
+  serverInstance.on('upgrade', (request, socket, head) => {
     const requestUrl = new URL(request.url, `http://${request.headers.host}`);
     const pathname = requestUrl.pathname;
 
     if (pathname.startsWith('/api-proxy/')) {
-        if (!apiKey) {
-            socket.destroy();
-            return;
-        }
-
-        wss.handleUpgrade(request, socket, head, (clientWs) => {
-            const targetPathSegment = pathname.substring('/api-proxy'.length);
-            const clientQuery = new URLSearchParams(requestUrl.search);
-            clientQuery.set('key', apiKey);
-            const targetGeminiWsUrl = `${externalWsBaseUrl}${targetPathSegment}?${clientQuery.toString()}`;
-
-            const geminiWs = new WebSocket(targetGeminiWsUrl, {
-                protocol: request.headers['sec-websocket-protocol'],
-            });
-
-            const messageQueue = [];
-
-            geminiWs.on('open', () => {
-                while (messageQueue.length > 0) {
-                    const message = messageQueue.shift();
-                    if (geminiWs.readyState === WebSocket.OPEN) geminiWs.send(message);
-                }
-            });
-
-            geminiWs.on('message', (msg) => {
-                if (clientWs.readyState === WebSocket.OPEN) clientWs.send(msg);
-            });
-
-            geminiWs.on('close', (code, reason) => {
-                if (clientWs.readyState === WebSocket.OPEN) clientWs.close(code, reason.toString());
-            });
-
-            geminiWs.on('error', () => {
-                if (clientWs.readyState === WebSocket.OPEN) clientWs.close(1011, 'Upstream Error');
-            });
-
-            clientWs.on('message', (msg) => {
-                if (geminiWs.readyState === WebSocket.OPEN) {
-                    geminiWs.send(msg);
-                } else if (geminiWs.readyState === WebSocket.CONNECTING) {
-                    messageQueue.push(msg);
-                }
-            });
-
-            clientWs.on('close', (code, reason) => {
-                if (geminiWs.readyState === WebSocket.OPEN) geminiWs.close(code, reason.toString());
-            });
-             clientWs.on('error', () => {
-                if (geminiWs.readyState === WebSocket.OPEN) geminiWs.close(1011, 'Client Error');
-            });
-        });
-    } else {
+      if (!apiKey) {
         socket.destroy();
+        return;
+      }
+
+      wss.handleUpgrade(request, socket, head, (clientWs) => {
+        const targetPathSegment = pathname.substring('/api-proxy'.length);
+        const clientQuery = new URLSearchParams(requestUrl.search);
+        clientQuery.set('key', apiKey);
+        const targetGeminiWsUrl = `${externalWsBaseUrl}${targetPathSegment}?${clientQuery.toString()}`;
+
+        const geminiWs = new WebSocket(targetGeminiWsUrl, {
+          protocol: request.headers['sec-websocket-protocol'],
+        });
+
+        const messageQueue = [];
+
+        geminiWs.on('open', () => {
+          while (messageQueue.length > 0) {
+            const message = messageQueue.shift();
+            if (geminiWs.readyState === WebSocket.OPEN) geminiWs.send(message);
+          }
+        });
+
+        geminiWs.on('message', (msg) => {
+          if (clientWs.readyState === WebSocket.OPEN) clientWs.send(msg);
+        });
+
+        geminiWs.on('close', (code, reason) => {
+          if (clientWs.readyState === WebSocket.OPEN) clientWs.close(code, reason.toString());
+        });
+
+        geminiWs.on('error', () => {
+          if (clientWs.readyState === WebSocket.OPEN) clientWs.close(1011, 'Upstream Error');
+        });
+
+        clientWs.on('message', (msg) => {
+          if (geminiWs.readyState === WebSocket.OPEN) {
+            geminiWs.send(msg);
+          } else if (geminiWs.readyState === WebSocket.CONNECTING) {
+            messageQueue.push(msg);
+          }
+        });
+
+        clientWs.on('close', (code, reason) => {
+          if (geminiWs.readyState === WebSocket.OPEN) geminiWs.close(code, reason.toString());
+        });
+        clientWs.on('error', () => {
+          if (geminiWs.readyState === WebSocket.OPEN) geminiWs.close(1011, 'Client Error');
+        });
+      });
+    } else {
+      socket.destroy();
     }
-});
+  });
+}
