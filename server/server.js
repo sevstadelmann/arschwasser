@@ -299,10 +299,16 @@ app.get('*', (req, res) => {
 let server;
 
 (async function initServer() {
+    console.log('Starting server initialization...');
+    console.log('PORT environment variable:', process.env.PORT);
+    
+    // Try to load GCP secrets, but don't crash if they fail
     try {
+        console.log('Attempting to load GCP secrets...');
         await gcpSecrets.init();
+        console.log('GCP secrets loaded successfully');
     } catch (err) {
-        console.error('Proceeding even though GCP secret loading failed:', err.message || err);
+        console.warn('GCP secret loading failed, continuing with existing env variables:', err.message || err);
     }
 
     // Now create the transporter using whatever is present in process.env
@@ -319,17 +325,31 @@ let server;
       pass: process.env.EMAIL_PASS ? 'SET' : 'NOT SET'
     });
 
+    // Start server listening BEFORE any other async operations
     server = app.listen(port, '0.0.0.0', () => { 
-        console.log(`Server listening on port ${port} and host 0.0.0.0`);
-        console.log(`HTTP/WS proxy active on /api-proxy/**`);
+        console.log(`✓ Server listening on port ${port} and host 0.0.0.0`);
+        console.log(`✓ HTTP/WS proxy active on /api-proxy/**`);
     });
+    
+    server.on('error', (err) => {
+        console.error('Server error:', err);
+        process.exit(1);
+    });
+    
     // Attach websocket proxy now that server is available
     try {
       attachWebsocketProxy(server);
+      console.log('✓ WebSocket proxy attached');
     } catch (e) {
       console.error('Failed to attach websocket proxy:', e);
+      // Don't exit - WS proxy is optional, HTTP proxy should still work
     }
-})();
+    
+    console.log('Server initialization complete');
+})().catch(err => {
+    console.error('FATAL: Server initialization failed:', err);
+    process.exit(1);
+});
 
 
 // --- WEBSOCKET PROXY (attached after server start) ---

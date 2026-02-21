@@ -16,7 +16,9 @@ FROM node:22-alpine
 WORKDIR /app
 
 # Environment auf production setzen (wichtig für server.js Logik)
+# Explicitly set PORT to 8080 - Cloud Run will override this
 ENV NODE_ENV=production
+ENV PORT=8080
 
 # 3. Server-Dependencies installieren (Cache effizient nutzen)
 # Wir kopieren erst nur package.json aus dem server-Ordner
