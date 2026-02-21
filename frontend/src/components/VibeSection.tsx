@@ -32,7 +32,7 @@ export const VibeSection: React.FC = () => {
                <img 
                  src="https://falstaff.b-cdn.net/storage/2024/07/HERMITAGE_Beach-Club_Events_1.jpg" 
                  alt="Summer vibes" 
-                 className="rounded-2xl w-full h-[400px] md:h-[600px] object-cover filter contrast-110 saturate-110"
+                 className="rounded-2xl w-full h-[400px] md:h-[500px] object-cover filter contrast-110 saturate-110"
                />
             </motion.div>
             

@@ -13,7 +13,7 @@ export const Home: React.FC = () => {
       <div className="relative z-40 -mt-10 mb-20">
         <Marquee 
           text={t('marquee1.text')}
-          className="bg-[#23C4D8] text-white rotate-1 scale-105 border-y-4 border-white shadow-lg"
+          className="bg-[#23C4D8] text-white rotate-1 scale-105 border-y-4 border-white"
           baseVelocity={2}
         />
       </div>
@@ -21,7 +21,7 @@ export const Home: React.FC = () => {
       <div className="relative z-20 my-10">
         <Marquee 
           text={t('marquee2.text')}
-          className="bg-[#FFD700] text-black -rotate-1 scale-105 border-y-4 border-white shadow-lg"
+          className="bg-[#FFD700] text-black -rotate-1 scale-105 border-y-4 border-white"
           baseVelocity={-2}
         />
       </div>
