@@ -2,7 +2,7 @@
 FROM node:22-alpine AS builder
 WORKDIR /app
 
-# 1. Alles kopieren
+# 1. Copy all source code (Frontend + Server)
 COPY . .
 
 # 2. Frontend bauen
@@ -15,30 +15,24 @@ RUN npm run build
 FROM node:22-alpine
 WORKDIR /app
 
-# Environment auf production setzen (wichtig für server.js Logik)
+# Set production environment variables
 # Explicitly set PORT to 8080 - Cloud Run will override this
 ENV NODE_ENV=production
 ENV PORT=8080
 
-# 3. Server-Dependencies installieren (Cache effizient nutzen)
-# Wir kopieren erst nur package.json aus dem server-Ordner
+# 3. Install Server-Dependencies
 COPY server/package.json ./package.json
 RUN npm install
 
-# 4. Den Server-Code kopieren
-# Wir kopieren server.js direkt ins Root von /app
-COPY server/server.js ./
-# Kopiere auch die .env Datei
-COPY server/.env ./
-# Falls du weitere Server-Dateien hast (z.B. utils.js), kopiere den ganzen Ordner:
-# COPY server/ ./
+# 4. Copy Server-Code
+# Copy the entire server directory, including .env (which should be in server/)
+COPY server/ ./
 
-# 5. Das gebaute Frontend kopieren
-# Wir benennen den Ordner im Container explizit 'public', damit server.js ihn findet
-# ACHTUNG: Passe 'dist' an 'build' an, falls du kein Vite nutzt!
+# 5. Copy Frontend-Build
+# rename 'dist' to 'build' if you are not using Vite!
+# If using Vite, change the output folder in vite.config.js to 'dist' and adjust this COPY command accordingly.
 COPY --from=builder /app/frontend/build ./public
 
-# 6. Starten
+# 6. Start
 EXPOSE 8080
-# Cloud Run injectet PORT, dein Server nutzt process.env.PORT (korrekt)
 CMD ["node", "server.js"]
